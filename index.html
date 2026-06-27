@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FARO Analytics — Registro</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&family=Space+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+/* ===== TOKENS NOCHE (default) ===== */
+:root{
+  --black:#06080A;
+  --dark:#0C1410;
+  --panel:#111A14;
+  --border:#1C2E20;
+  --green:#00C97A;
+  --white:#EDF4F0;
+  --muted:#4A6A55;
+  --amber:#F5A623;
+  --red:#FF4A4A;
+  --bg-body:#06080A;
+}
+
+/* ===== TOKENS DÍA ===== */
+[data-theme="dia"]{
+  --black:#F5F8F6;
+  --dark:#E8F0EB;
+  --panel:#FFFFFF;
+  --border:#C0D8C8;
+  --green:#00A85E;
+  --white:#0D1F14;
+  --muted:#4A7A5A;
+  --amber:#C47A00;
+  --red:#CC2222;
+  --bg-body:#EEF4F0;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg-body);
+  color:var(--white);
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+  padding:2rem 1rem 4rem;
+  font-size:16px;
+  transition:background .3s,color .3s;
+}
+
+/* ===== HEADER ===== */
+.header{
+  text-align:center;
+  margin-bottom:2.5rem;
+  position:relative;
+}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.8rem;letter-spacing:-.03em;}
+.logo span{color:var(--green);}
+.eyebrow{font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-top:.25rem;}
+
+/* ===== TOGGLE TEMA ===== */
+.theme-toggle{
+  position:absolute;
+  top:0;right:0;
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:.4rem .85rem;
+  font-family:'Space Mono',monospace;
+  font-size:.7rem;
+  color:var(--muted);
+  cursor:pointer;
+  display:flex;align-items:center;gap:.4rem;
+  transition:background .3s,border-color .3s,color .3s;
+}
+.theme-toggle:hover{color:var(--white);border-color:var(--green);}
+.theme-icon{font-size:.9rem;line-height:1;}
+
+/* ===== TABS ===== */
+.tabs{
+  display:flex;gap:.5rem;
+  background:var(--panel);
+  border:.5px solid var(--border);
+  border-radius:14px;padding:.4rem;
+  margin-bottom:1.5rem;
+  max-width:480px;margin-left:auto;margin-right:auto;
+  transition:background .3s,border-color .3s;
+}
+.tab{
+  flex:1;padding:.75rem;border:none;border-radius:10px;
+  background:transparent;color:var(--muted);
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.92rem;
+  cursor:pointer;transition:all .2s;
+}
+.tab.active{background:var(--green);color:#06080A;}
+
+/* ===== FORM CARD ===== */
+.form-card{
+  background:var(--panel);
+  border:.5px solid var(--border);
+  border-radius:18px;padding:1.5rem;
+  max-width:480px;margin:0 auto;
+  transition:background .3s,border-color .3s;
+}
+.form-title{font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;margin-bottom:.25rem;}
+.form-desc{font-size:.9rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.6;}
+
+.field{margin-bottom:1rem;}
+.field label{
+  font-family:'Space Mono',monospace;font-size:.7rem;
+  color:var(--green);text-transform:uppercase;letter-spacing:.12em;
+  display:block;margin-bottom:.4rem;
+}
+.field input,.field select{
+  width:100%;height:54px;
+  background:var(--dark);
+  border:1px solid var(--border);
+  border-radius:10px;padding:0 1rem;
+  color:var(--white);
+  font-family:'DM Sans',sans-serif;font-size:17px;outline:none;
+  -webkit-appearance:none;
+  transition:background .3s,border-color .2s,color .3s;
+}
+.field input:focus,.field select:focus{border-color:var(--green);}
+.field select option{background:var(--dark);}
+
+.submit-btn{
+  width:100%;padding:1rem;border:none;border-radius:12px;
+  background:var(--green);color:#06080A;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;
+  cursor:pointer;margin-top:.5rem;transition:filter .15s;
+}
+.submit-btn:hover{filter:brightness(1.06);}
+.submit-btn:disabled{background:var(--border);color:var(--muted);cursor:default;filter:none;}
+
+/* ===== SUCCESS SCREEN ===== */
+.success{
+  display:none;text-align:center;
+  background:var(--panel);
+  border:.5px solid var(--border);
+  border-radius:18px;padding:2rem 1.5rem;
+  max-width:480px;margin:0 auto;
+  transition:background .3s,border-color .3s;
+}
+.success-icon{
+  width:70px;height:70px;border-radius:50%;
+  background:rgba(0,201,122,.1);
+  border:2px solid var(--green);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;margin:0 auto 1rem;
+}
+.success-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;margin-bottom:.5rem;}
+.success-desc{font-size:.92rem;color:var(--muted);margin-bottom:1.5rem;line-height:1.6;}
+
+.code-box{
+  background:var(--dark);
+  border:.5px solid var(--green);
+  border-radius:12px;padding:1rem;margin-bottom:.75rem;
+  transition:background .3s;
+}
+.code-label{font-family:'Space Mono',monospace;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.3rem;}
+.code-value{font-family:'Space Mono',monospace;font-size:1.25rem;font-weight:700;color:var(--green);letter-spacing:.08em;}
+
+.screenshot-note{
+  background:rgba(245,166,35,.08);
+  border:.5px solid rgba(245,166,35,.2);
+  border-radius:10px;padding:.85rem;
+  font-size:.88rem;color:var(--amber);
+  line-height:1.6;margin-bottom:1rem;
+}
+
+/* ===== BOTÓN CORREO ===== */
+.mail-btn{
+  width:100%;padding:.85rem;border:none;border-radius:12px;
+  background:var(--green);color:#06080A;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;
+  cursor:pointer;margin-top:.5rem;
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  transition:filter .15s;
+}
+.mail-btn:hover{filter:brightness(1.06);}
+.mail-btn:disabled{background:var(--border);color:var(--muted);cursor:default;filter:none;}
+
+/* ===== CAMPO CORREO EN SUCCESS DE RANCHO ===== */
+.correo-field{
+  background:var(--dark);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:.7rem 1rem;
+  color:var(--white);
+  font-family:'DM Sans',sans-serif;
+  font-size:15px;
+  width:100%;outline:none;
+  margin-bottom:.5rem;
+  transition:border-color .2s,background .3s,color .3s;
+}
+.correo-field:focus{border-color:var(--green);}
+.correo-label{
+  font-family:'Space Mono',monospace;font-size:.65rem;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.1em;
+  display:block;margin-bottom:.35rem;text-align:left;
+}
+.correo-wrap{
+  background:var(--dark);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:1rem;
+  margin-bottom:.75rem;
+  transition:background .3s,border-color .3s;
+}
+.correo-wrap-title{
+  font-family:'Space Mono',monospace;font-size:.65rem;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.1em;
+  margin-bottom:.6rem;text-align:left;
+}
+
+.new-btn{
+  width:100%;padding:.75rem;
+  border:1px solid var(--border);
+  border-radius:12px;background:transparent;
+  color:var(--muted);font-family:'DM Sans',sans-serif;
+  font-size:.85rem;cursor:pointer;margin-top:.5rem;
+  transition:color .15s,border-color .15s;
+}
+.new-btn:hover{color:var(--white);border-color:var(--muted);}
+
+.error-msg{font-size:.75rem;color:var(--red);margin-top:.5rem;display:none;}
+.loading-msg{font-size:.75rem;color:var(--muted);margin-top:.5rem;display:none;text-align:center;}
+
+/* toast */
+#toasts{position:fixed;bottom:1.2rem;right:1rem;z-index:99;display:flex;flex-direction:column;gap:.5rem;}
+.toast{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-left:3px solid var(--green);
+  border-radius:10px;padding:.75rem 1rem;
+  min-width:220px;font-size:.85rem;
+  box-shadow:0 8px 24px rgba(0,0,0,.35);
+  animation:slideIn .25s ease both;
+  transition:opacity .25s,transform .25s;
+}
+.toast.err{border-left-color:var(--red);}
+.toast.info{border-left-color:#00AAFF;}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">FARO <span>Analytics</span></div>
+  <div class="eyebrow">Portal de registro</div>
+  <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" aria-label="Cambiar tema">
+    <span class="theme-icon" id="themeIcon">🌙</span>
+    <span id="themeTxt">Noche</span>
+  </button>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('asesor')">Registro de Asesor</button>
+  <button class="tab" onclick="showTab('rancho')">Registro de Rancho</button>
+</div>
+
+<!-- FORM ASESOR -->
+<div id="formAsesor" class="form-card">
+  <div class="form-title">Registro de Asesor</div>
+  <div class="form-desc">Completa tus datos para obtener tu código de asesor. Una vez registrado manda un screenshot de tu código para confirmar tu alta.</div>
+
+  <div class="field">
+    <label>Nombre completo</label>
+    <input type="text" id="a_nombre" placeholder="Ej: Juan García López" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Teléfono</label>
+    <input type="tel" id="a_telefono" placeholder="Ej: 229 123 4567" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Correo electrónico</label>
+    <input type="email" id="a_correo" placeholder="Ej: juan@correo.com" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Zona o región</label>
+    <input type="text" id="a_zona" placeholder="Ej: Veracruz Norte, Córdoba..." autocomplete="off"/>
+  </div>
+
+  <button class="submit-btn" onclick="registrarAsesor()">Registrarme como asesor</button>
+  <div class="error-msg" id="a_error"></div>
+  <div class="loading-msg" id="a_loading">⏳ Registrando...</div>
+</div>
+
+<!-- SUCCESS ASESOR -->
+<div id="successAsesor" class="success">
+  <div class="success-icon">✅</div>
+  <div class="success-title">¡Registro exitoso!</div>
+  <div class="success-desc">Tu código de asesor ha sido generado. Guárdalo — lo necesitarás para registrar tus ranchos.</div>
+
+  <div class="code-box">
+    <div class="code-label">Tu código de asesor</div>
+    <div class="code-value" id="codigoAsesorResult"></div>
+  </div>
+
+  <div class="screenshot-note">
+    📸 <strong>Importante:</strong> Toma un screenshot de esta pantalla con tu código y mándalo a FARO Analytics para confirmar tu registro.
+  </div>
+
+  <!-- BOTÓN ENVÍO CORREO ASESOR -->
+  <button class="mail-btn" id="btnCorreoAsesor" onclick="enviarCorreoAsesor()">
+    ✉ Enviarme mi código por correo
+  </button>
+  <div id="correoAsesorStatus" style="font-size:.78rem;color:var(--muted);text-align:center;margin-top:.4rem;min-height:1.1em;"></div>
+
+  <button class="new-btn" onclick="resetForm('asesor')">Registrar otro asesor</button>
+</div>
+
+<!-- FORM RANCHO -->
+<div id="formRancho" class="form-card" style="display:none;">
+  <div class="form-title">Registro de Rancho</div>
+  <div class="form-desc">Completa los datos del rancho. Necesitas tu código de asesor para vincular el rancho a tu cuenta.</div>
+
+  <div class="field">
+    <label>Nombre del rancho</label>
+    <input type="text" id="r_nombre" placeholder="Ej: Rancho Miahuapan" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Municipio</label>
+    <input type="text" id="r_municipio" placeholder="Ej: Veracruz, Córdoba..." autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Estado / Región</label>
+    <input type="text" id="r_estado" placeholder="Ej: Veracruz" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Nombre del dueño o cliente principal</label>
+    <input type="text" id="r_dueno" placeholder="Ej: Roberto García" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Teléfono del dueño</label>
+    <input type="tel" id="r_tel_dueno" placeholder="Ej: 229 123 4567" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Nombre del caporal</label>
+    <input type="text" id="r_caporal" placeholder="Ej: Hervicamor Camacho" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Teléfono del caporal</label>
+    <input type="tel" id="r_telefono" placeholder="Ej: 229 123 4567" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>¿Cuántos vientres tiene en producción?</label>
+    <input type="number" id="r_vientres" placeholder="Ej: 45" min="0" autocomplete="off"/>
+  </div>
+  <div class="field">
+    <label>Tu código de asesor</label>
+    <input type="text" id="r_codAsesor" placeholder="Ej: ASE-001-ERWI" autocomplete="off" style="text-transform:uppercase;letter-spacing:.05em;font-family:'Space Mono',monospace;"/>
+  </div>
+
+  <button class="submit-btn" onclick="registrarRancho()">Registrar rancho</button>
+  <div class="error-msg" id="r_error"></div>
+  <div class="loading-msg" id="r_loading">⏳ Registrando...</div>
+</div>
+
+<!-- SUCCESS RANCHO -->
+<div id="successRancho" class="success">
+  <div class="success-icon">🏡</div>
+  <div class="success-title">¡Rancho registrado!</div>
+  <div class="success-desc">El rancho ha sido registrado exitosamente. Guarda estos códigos y envíalos al asesor para que los entregue al rancho.</div>
+
+  <div class="code-box">
+    <div class="code-label">Código del rancho</div>
+    <div class="code-value" id="codigoRanchoResult"></div>
+  </div>
+  <div class="code-box" style="margin-top:.5rem;">
+    <div class="code-label">Tu código de asesor</div>
+    <div class="code-value" id="codigoAsesorRanchoResult"></div>
+  </div>
+
+  <div class="screenshot-note">
+    📸 <strong>Importante:</strong> Toma un screenshot de esta pantalla con ambos códigos y mándalo a FARO Analytics. Tu acceso será activado en breve.
+  </div>
+
+  <!-- ENVÍO CORREO RANCHO -->
+  <div class="correo-wrap">
+    <div class="correo-wrap-title">✉ Enviar códigos al asesor por correo</div>
+    <label class="correo-label">Correo electrónico del asesor</label>
+    <input class="correo-field" type="email" id="r_correoAsesor" placeholder="correo@asesor.com" autocomplete="off"/>
+    <button class="mail-btn" id="btnCorreoRancho" onclick="enviarCorreoRancho()">
+      ✉ Enviar código al asesor
+    </button>
+    <div id="correoRanchoStatus" style="font-size:.78rem;color:var(--muted);text-align:center;margin-top:.4rem;min-height:1.1em;"></div>
+  </div>
+
+  <button class="new-btn" onclick="resetForm('rancho')">Registrar otro rancho</button>
+</div>
+
+<!-- TOASTS -->
+<div id="toasts"></div>
+
+<script>
+/* =========================================================
+   EMAILJS — Configura tus IDs aquí
+   1. Crea cuenta gratis en emailjs.com
+   2. Crea un "Email Service" (Gmail) y un "Email Template"
+   3. Pega los IDs abajo
+   ========================================================= */
+var EMAILJS_PUBLIC_KEY  = 'UkhaNlGdiSxVCaSVC';
+var EMAILJS_SERVICE_ID  = 'service_dsuyuw5';
+var EMAILJS_TEMPLATE_ID = 'template_3tsmsob';
+
+(function(){
+  if(EMAILJS_PUBLIC_KEY !== 'TU_PUBLIC_KEY'){
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+  }
+})();
+
+/* =========================================================
+   TEMA DÍA / NOCHE
+   ========================================================= */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  var isDia = theme === 'dia';
+  document.getElementById('themeIcon').textContent = isDia ? '☀' : '🌙';
+  document.getElementById('themeTxt').textContent  = isDia ? 'Día' : 'Noche';
+  localStorage.setItem('faro_registro_theme', theme);
+}
+function toggleTheme(){
+  var current = document.documentElement.getAttribute('data-theme') || 'noche';
+  applyTheme(current === 'dia' ? 'noche' : 'dia');
+}
+applyTheme(localStorage.getItem('faro_registro_theme') || 'noche');
+
+/* =========================================================
+   SHEETS URL
+   ========================================================= */
+var SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxjkUhYAT5YQrrkwC22P61Dy7QI4TD4_lv1ZsZqPKD-j_UZxmr3j_uxLkFNJoVV5Avd/exec';
+
+/* =========================================================
+   TABS
+   ========================================================= */
+function showTab(tab){
+  document.querySelectorAll('.tab').forEach(function(t,i){
+    t.classList.toggle('active',(i===0&&tab==='asesor')||(i===1&&tab==='rancho'));
+  });
+  document.getElementById('formAsesor').style.display   = tab==='asesor'?'block':'none';
+  document.getElementById('formRancho').style.display   = tab==='rancho'?'block':'none';
+  document.getElementById('successAsesor').style.display= 'none';
+  document.getElementById('successRancho').style.display= 'none';
+}
+
+/* =========================================================
+   GENERAR CÓDIGO
+   ========================================================= */
+function generarCodigo(prefijo, nombre, rowNum){
+  var initials = nombre.trim().toUpperCase().replace(/\s+/g,'').substring(0,4);
+  var num = String(rowNum).padStart(3,'0');
+  return prefijo+'-'+num+'-'+initials;
+}
+
+/* =========================================================
+   SEND DATA (sin cambios — hidden form POST)
+   ========================================================= */
+function sendData(data, onSuccess, onError){
+  var formId   = 'faro_form_'  +Date.now();
+  var iframeId = 'faro_iframe_'+Date.now();
+
+  var iframe = document.createElement('iframe');
+  iframe.name = iframeId; iframe.id = iframeId; iframe.style.display='none';
+  document.body.appendChild(iframe);
+
+  var form = document.createElement('form');
+  form.method='POST'; form.action=SHEETS_URL;
+  form.target=iframeId; form.style.display='none';
+
+  var input = document.createElement('input');
+  input.type='hidden'; input.name='payload';
+  input.value=JSON.stringify(data);
+  form.appendChild(input);
+  document.body.appendChild(form);
+
+  iframe.onload = function(){
+    console.log('Form enviado OK');
+    setTimeout(function(){
+      try{document.body.removeChild(form);}catch(e){}
+      try{document.body.removeChild(iframe);}catch(e){}
+    },1000);
+    onSuccess();
+  };
+  setTimeout(function(){
+    try{document.body.removeChild(form);}catch(e){}
+    try{document.body.removeChild(iframe);}catch(e){}
+    onSuccess();
+  },6000);
+
+  form.submit();
+  console.log('Form submitted con modulo:',data.modulo);
+}
+
+/* =========================================================
+   REGISTRO ASESOR (sin cambios en lógica)
+   ========================================================= */
+
+// Variables de sesión para el correo
+var _asesorRegistrado = {};
+
+function registrarAsesor(){
+  var nombre   = document.getElementById('a_nombre').value.trim();
+  var telefono = document.getElementById('a_telefono').value.trim();
+  var correo   = document.getElementById('a_correo').value.trim();
+  var zona     = document.getElementById('a_zona').value.trim();
+  var err      = document.getElementById('a_error');
+  var loading  = document.getElementById('a_loading');
+
+  err.style.display='none';
+  if(!nombre){   err.textContent='Por favor escribe tu nombre completo.'; err.style.display='block'; return; }
+  if(!telefono){ err.textContent='Por favor escribe tu teléfono.';        err.style.display='block'; return; }
+  if(!zona){     err.textContent='Por favor escribe tu zona o región.';   err.style.display='block'; return; }
+
+  loading.style.display='block';
+  document.querySelector('#formAsesor .submit-btn').disabled=true;
+
+  var rowNum = Math.floor(Math.random()*900)+100;
+  var codigo = generarCodigo('ASE', nombre, rowNum);
+
+  var record = {
+    modulo:'REGISTRO_ASESOR',
+    id:'ASE-REG-'+Date.now(),
+    datos:{
+      nombre:nombre, telefono:telefono, correo:correo,
+      zona:zona, codigo:codigo,
+      fecha_alta:new Date().toLocaleDateString('es-MX'),
+      estado:'Pendiente activación'
+    }
+  };
+
+  sendData(record, function(){
+    loading.style.display='none';
+    document.getElementById('formAsesor').style.display='none';
+    document.getElementById('codigoAsesorResult').textContent = codigo;
+    document.getElementById('successAsesor').style.display='block';
+    // Guardar datos para el correo
+    _asesorRegistrado = { nombre:nombre, telefono:telefono, correo:correo, zona:zona, codigo:codigo };
+    // Resetear estado del botón de correo
+    document.getElementById('btnCorreoAsesor').disabled = false;
+    document.getElementById('correoAsesorStatus').textContent = '';
+  }, function(){
+    loading.style.display='none';
+    document.querySelector('#formAsesor .submit-btn').disabled=false;
+    document.getElementById('a_error').textContent='Error al registrar. Intenta de nuevo.';
+    document.getElementById('a_error').style.display='block';
+  });
+}
+
+/* =========================================================
+   ENVÍO CORREO — ASESOR
+   ========================================================= */
+function enviarCorreoAsesor(){
+  if(!_asesorRegistrado.correo){
+    toast('No se capturó correo en el formulario','err');
+    return;
+  }
+  var btn    = document.getElementById('btnCorreoAsesor');
+  var status = document.getElementById('correoAsesorStatus');
+  btn.disabled = true;
+  status.textContent = '⏳ Enviando...';
+
+  if(EMAILJS_PUBLIC_KEY === 'TU_PUBLIC_KEY'){
+    setTimeout(function(){
+      status.textContent = '✓ (Demo) Correo simulado a '+_asesorRegistrado.correo;
+      btn.textContent = '✓ Correo enviado';
+    }, 800);
+    return;
+  }
+
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    to_email:      _asesorRegistrado.correo,
+    to_name:       _asesorRegistrado.nombre,
+    mensaje_intro: 'Tu registro como asesor de FARO Analytics ha sido procesado. A continuación encuentras tu código de acceso. Guarda este correo en un lugar seguro.',
+    label_datos:   'Tus datos de asesor',
+    label_campo1:  'Teléfono',
+    valor_campo1:  _asesorRegistrado.telefono || '—',
+    label_campo2:  'Zona',
+    valor_campo2:  _asesorRegistrado.zona     || '—',
+    label_campo3:  'Fecha de alta',
+    valor_campo3:  new Date().toLocaleDateString('es-MX'),
+    label_codigo:  'Tu código de asesor',
+    codigo:        _asesorRegistrado.codigo,
+    nota_codigo:   'Comparte este código con tus ranchos para vincularlos a tu cuenta',
+    cod_asesor:    _asesorRegistrado.codigo,
+    nota_amber:    'Tu cuenta está en estado Pendiente. Un administrador de FARO la activará en breve. Recibirás confirmación cuando esté lista.',
+    portal_url:    'https://faroanalytics.com.mx'
+  }).then(function(){
+    status.textContent = '✓ Correo enviado a '+_asesorRegistrado.correo;
+    btn.textContent = '✓ Correo enviado';
+    toast('Correo enviado a '+_asesorRegistrado.correo);
+  }).catch(function(err){
+    btn.disabled = false;
+    status.textContent = '✗ Error al enviar. Intenta de nuevo.';
+    toast('Error: '+(err.text||'revisa tu configuración de EmailJS'),'err');
+  });
+}
+
+/* =========================================================
+   REGISTRO RANCHO (sin cambios en lógica)
+   ========================================================= */
+
+var _ranchoRegistrado = {};
+
+function registrarRancho(){
+  var nombre    = document.getElementById('r_nombre').value.trim();
+  var municipio = document.getElementById('r_municipio').value.trim();
+  var estado    = document.getElementById('r_estado').value.trim();
+  var dueno     = document.getElementById('r_dueno').value.trim();
+  var tel_dueno = document.getElementById('r_tel_dueno').value.trim();
+  var caporal   = document.getElementById('r_caporal').value.trim();
+  var telefono  = document.getElementById('r_telefono').value.trim();
+  var vientres  = document.getElementById('r_vientres').value.trim();
+  var codAsesor = document.getElementById('r_codAsesor').value.trim().toUpperCase();
+  var err       = document.getElementById('r_error');
+  var loading   = document.getElementById('r_loading');
+
+  err.style.display='none';
+  if(!nombre){    err.textContent='Por favor escribe el nombre del rancho.';    err.style.display='block'; return; }
+  if(!municipio){ err.textContent='Por favor escribe el municipio.';            err.style.display='block'; return; }
+  if(!dueno){     err.textContent='Por favor escribe el nombre del dueño.';     err.style.display='block'; return; }
+  if(!caporal){   err.textContent='Por favor escribe el nombre del caporal.';   err.style.display='block'; return; }
+  if(!telefono){  err.textContent='Por favor escribe el teléfono del caporal.'; err.style.display='block'; return; }
+  if(!codAsesor){ err.textContent='Por favor escribe tu código de asesor.';     err.style.display='block'; return; }
+
+  loading.style.display='block';
+  loading.textContent='⏳ Verificando código de asesor...';
+  document.querySelector('#formRancho .submit-btn').disabled=true;
+
+  var SHEETS_URL_VAL = 'https://script.google.com/macros/s/AKfycbxjkUhYAT5YQrrkwC22P61Dy7QI4TD4_lv1ZsZqPKD-j_UZxmr3j_uxLkFNJoVV5Avd/exec';
+  fetch(SHEETS_URL_VAL+'?validar_asesor='+encodeURIComponent(codAsesor))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res.ok){
+        loading.style.display='none';
+        document.querySelector('#formRancho .submit-btn').disabled=false;
+        err.textContent = res.msg||'Código de asesor no válido o inactivo.';
+        err.style.display='block';
+        return;
+      }
+      loading.textContent='⏳ Registrando rancho...';
+      completarRegistroRancho(nombre,municipio,estado,dueno,tel_dueno,caporal,telefono,vientres,codAsesor,loading);
+    })
+    .catch(function(){
+      loading.style.display='none';
+      document.querySelector('#formRancho .submit-btn').disabled=false;
+      err.textContent='Error de conexión. Verifica tu internet.';
+      err.style.display='block';
+    });
+}
+
+function completarRegistroRancho(nombre,municipio,estado,dueno,tel_dueno,caporal,telefono,vientres,codAsesor,loading){
+  var rowNum = Math.floor(Math.random()*900)+100;
+  var codigoRancho = generarCodigo('RAN', nombre, rowNum);
+
+  var record = {
+    modulo:'REGISTRO_RANCHO',
+    id:'RAN-REG-'+Date.now(),
+    datos:{
+      nombre_rancho:nombre, municipio:municipio, estado:estado,
+      dueno:dueno, tel_dueno:tel_dueno,
+      caporal:caporal, telefono:telefono,
+      vientres_produccion: vientres || '—',
+      codigo_asesor:codAsesor,
+      codigo_rancho:codigoRancho,
+      fecha_alta:new Date().toLocaleDateString('es-MX'),
+      membresia:'Pendiente activación'
+    }
+  };
+
+  sendData(record, function(){
+    loading.style.display='none';
+    document.getElementById('formRancho').style.display='none';
+    document.getElementById('codigoRanchoResult').textContent        = codigoRancho;
+    document.getElementById('codigoAsesorRanchoResult').textContent  = codAsesor;
+    document.getElementById('successRancho').style.display='block';
+    // Guardar datos para el correo
+    _ranchoRegistrado = {
+      nombre:nombre, municipio:municipio, dueno:dueno,
+      caporal:caporal, codAsesor:codAsesor, codigoRancho:codigoRancho
+    };
+    document.getElementById('r_correoAsesor').value = '';
+    document.getElementById('btnCorreoRancho').disabled = false;
+    document.getElementById('correoRanchoStatus').textContent = '';
+    document.getElementById('btnCorreoRancho').textContent = '✉ Enviar código al asesor';
+  }, function(){
+    loading.style.display='none';
+    document.querySelector('#formRancho .submit-btn').disabled=false;
+    document.getElementById('r_error').textContent='Error al registrar. Intenta de nuevo.';
+    document.getElementById('r_error').style.display='block';
+  });
+}
+
+/* =========================================================
+   ENVÍO CORREO — RANCHO (al correo del asesor)
+   ========================================================= */
+function enviarCorreoRancho(){
+  var correoAsesor = document.getElementById('r_correoAsesor').value.trim();
+  if(!correoAsesor){
+    toast('Escribe el correo del asesor primero','err');
+    return;
+  }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoAsesor)){
+    toast('Escribe un correo válido','err');
+    return;
+  }
+
+  var btn    = document.getElementById('btnCorreoRancho');
+  var status = document.getElementById('correoRanchoStatus');
+  btn.disabled = true;
+  status.textContent = '⏳ Enviando...';
+
+  if(EMAILJS_PUBLIC_KEY === 'TU_PUBLIC_KEY'){
+    setTimeout(function(){
+      status.textContent = '✓ (Demo) Correo simulado a '+correoAsesor;
+      btn.textContent = '✓ Correo enviado';
+    }, 800);
+    return;
+  }
+
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    to_email:      correoAsesor,
+    to_name:       _ranchoRegistrado.codAsesor || 'Asesor',
+    mensaje_intro: 'Registraste un nuevo rancho en tu cartera. Aquí está el código de acceso que deberás entregar al propietario o caporal para que puedan ingresar al portal de campo.',
+    label_datos:   'Datos del rancho registrado',
+    label_campo1:  'Municipio',
+    valor_campo1:  _ranchoRegistrado.municipio  || '—',
+    label_campo2:  'Dueño',
+    valor_campo2:  _ranchoRegistrado.dueno      || '—',
+    label_campo3:  'Caporal',
+    valor_campo3:  _ranchoRegistrado.caporal    || '—',
+    label_codigo:  'Código de acceso al portal',
+    codigo:        _ranchoRegistrado.codigoRancho,
+    nota_codigo:   'Entrega este código al propietario o caporal del rancho',
+    cod_asesor:    _ranchoRegistrado.codAsesor,
+    nota_amber:    'Guarda este correo. Contiene los datos que necesitas para apoyar a tu rancho en el acceso al sistema.',
+    portal_url:    'https://faroanalytics.com.mx'
+  }).then(function(){
+    status.textContent = '✓ Correo enviado a '+correoAsesor;
+    btn.textContent = '✓ Correo enviado';
+    toast('Correo enviado a '+correoAsesor);
+  }).catch(function(err){
+    btn.disabled = false;
+    status.textContent = '✗ Error al enviar. Intenta de nuevo.';
+    toast('Error: '+(err.text||'revisa tu configuración de EmailJS'),'err');
+  });
+}
+
+/* =========================================================
+   RESET FORMS (sin cambios)
+   ========================================================= */
+function resetForm(tipo){
+  if(tipo==='asesor'){
+    document.getElementById('successAsesor').style.display='none';
+    document.getElementById('formAsesor').style.display='block';
+    ['a_nombre','a_telefono','a_correo','a_zona'].forEach(function(id){
+      document.getElementById(id).value='';
+    });
+    document.querySelector('#formAsesor .submit-btn').disabled=false;
+    _asesorRegistrado = {};
+  } else {
+    document.getElementById('successRancho').style.display='none';
+    document.getElementById('formRancho').style.display='block';
+    ['r_nombre','r_municipio','r_estado','r_dueno','r_tel_dueno',
+     'r_caporal','r_telefono','r_vientres','r_codAsesor'].forEach(function(id){
+      document.getElementById(id).value='';
+    });
+    document.querySelector('#formRancho .submit-btn').disabled=false;
+    _ranchoRegistrado = {};
+  }
+}
+
+/* =========================================================
+   TOASTS
+   ========================================================= */
+function toast(msg, type){
+  var t = document.createElement('div');
+  t.className = 'toast'+(type==='err'?' err':type==='info'?' info':'');
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(function(){
+    t.style.opacity='0'; t.style.transform='translateX(20px)';
+    setTimeout(function(){ t.remove(); },250);
+  },3200);
+}
+</script>
+</body>
+</html>
